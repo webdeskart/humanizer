@@ -1,4 +1,4 @@
-# Humanizer AI Text Tool
+# WebDeskArt - Humanizer AI Text Tool
 
 Convert AI-generated text into natural, human-like writing instantly.
 
