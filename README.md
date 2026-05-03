@@ -2,7 +2,7 @@
 
 Convert AI-generated text into natural, human-like writing instantly.
 
-🔗 **Live Demo:** https://webdeskart.github.io/humanizer/
+🔗 <a href="https://webdeskart.github.io/humanizer/" target="_blank">Live Demo</a>
 
 This tool helps users rewrite robotic AI content into more natural, readable, and human-friendly text. It works directly in the browser and requires no signup or installation.
 
