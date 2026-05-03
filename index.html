@@ -1,1 +1,717 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Humanizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --bg-card: #1a1a24;
+      --bg-input: #0e0e14;
+      --accent: #00d4ff;
+      --accent-glow: rgba(0, 212, 255, 0.4);
+      --accent-purple: #a855f7;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --text-muted: #606070;
+      --border: #2a2a3a;
+      --success: #22c55e;
+      --error: #ef4444;
+    }
+
+    body {
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding-top: 20px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .logo-icon {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 50%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      margin-top: 8px;
+    }
+
+    /* Main Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-purple));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .btn-icon {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Textareas */
+    textarea {
+      width: 100%;
+      height: 320px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      resize: none;
+      transition: all 0.3s;
+      line-height: 1.6;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Action Bar */
+    .action-bar {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 30px 0;
+    }
+
+    .btn {
+      padding: 16px 40px;
+      border-radius: 14px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #00a8cc 100%);
+      color: var(--bg-primary);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
+
+    .btn-primary:active {
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+      background: var(--bg-secondary);
+    }
+
+    /* Loading spinner */
+    .btn .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+
+    .btn.loading .spinner { display: inline-block; }
+    .btn.loading .btn-text { opacity: 0.7; }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border-radius: 14px;
+      min-width: 100px;
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .stat:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* Options */
+    .options {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .options-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 20px;
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .checkbox-item:hover {
+      border-color: var(--border);
+    }
+
+    .checkbox-item input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .checkbox-item label {
+      font-size: 0.95rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: color 0.2s;
+    }
+
+    .checkbox-item:hover label { color: var(--text-primary); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--success);
+      color: var(--bg-primary);
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Processing animation */
+    .processing {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(10, 10, 15, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .processing.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .processing-content {
+      text-align: center;
+    }
+
+    .processing-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    .processing-text {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    /* Output highlight animation */
+    @keyframes highlight {
+      0% { background: transparent; }
+      50% { background: rgba(0, 212, 255, 0.1); }
+      100% { background: transparent; }
+    }
+
+    .output-highlight {
+      animation: highlight 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">✨</div>
+        <h1>AI Humanizer</h1>
+      </div>
+      <p class="subtitle">Transform AI-generated text into natural, human-written content</p>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">AI Text</span>
+          <button class="btn-icon" onclick="clearText()">Clear</button>
+        </div>
+        <textarea id="input" placeholder="Paste your AI-generated text here...&#10;&#10;Example:&#10;The implementation of machine learning algorithms has demonstrated significant potential in revolutionizing various industries. Furthermore, the integration of artificial intelligence into daily workflows has become increasingly prevalent in contemporary society."></textarea>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Humanized</span>
+          <button class="btn-icon" onclick="copyText()">Copy</button>
+        </div>
+        <textarea id="output" readonly placeholder="Your humanized text will appear here...&#10;&#10;Click 'Humanize' to transform!"></textarea>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn btn-primary" id="humanizeBtn" onclick="humanize()">
+        <span class="spinner"></span>
+        <span class="btn-text">Humanize</span>
+      </button>
+      <button class="btn btn-secondary" onclick="swapText()">Swap</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value" id="words">0</div>
+        <div class="stat-label">Words</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="chars">0</div>
+        <div class="stat-label">Characters</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="level">-</div>
+        <div class="stat-label">Level</div>
+      </div>
+    </div>
+
+    <div class="options">
+      <div class="options-title">Transformation Options</div>
+      <div class="checkbox-group">
+        <div class="checkbox-item">
+          <input type="checkbox" id="opt-informal" checked>
+          <label>Conversational tone</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="opt-shorten" checked>
+          <label>Remove filler words</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="opt-variety" checked>
+          <label>Sentence variety</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="opt-voice" checked>
+          <label>Active voice</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="opt-contractions">
+          <label>Use contractions</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="opt-casual">
+          <label>Casual tone</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="processing" id="processing">
+    <div class="processing-content">
+      <div class="processing-spinner"></div>
+      <div class="processing-text">Processing...</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Done!</div>
+
+  <script>
+    const replacements = {
+      'additionally': 'also', 'furthermore': 'plus', 'moreover': 'also',
+      'nevertheless': 'still', 'consequently': 'so', 'therefore': "that's why",
+      'thus': 'so', 'hence': 'so', 'subsequently': 'then',
+      'implemented': 'put in place', 'utilize': 'use', 'utilization': 'use',
+      'demonstrated': 'showed', 'demonstrates': 'shows', 'exhibited': 'showed',
+      'significant': 'major', 'significantly': 'a lot', 'substantially': 'greatly',
+      'prevalent': 'common', 'numerous': 'many', 'approximately': 'about',
+      'endeavor': 'attempt', 'methodology': 'method',
+      'establish': 'set up', 'facilitate': 'make easier', 'commence': 'begin',
+      'terminate': 'stop', 'fundamental': 'basic', 'essential': 'key',
+      'crucial': 'vital', 'paramount': 'top priority', 'sufficient': 'enough',
+      'prioritize': 'focus on', 'leverage': 'take advantage of', 'optimize': 'improve',
+      'streamline': 'simplify', 'disseminate': 'spread', 'magnitude': 'scale',
+      'comprehensive': 'thorough', 'exclusively': 'only', 'necessitate': 'require',
+      'in order to': 'to', 'with regard to': 'about', 'regarding': 'about',
+      'despite the fact that': 'though', 'in spite of': 'despite',
+      'on the other hand': 'but', 'conversely': 'instead',
+      'it is important to note': 'notably', 'needless to say': 'of course',
+      'currently': 'now', 'presently': 'now', 'in the event that': 'if',
+      'due to the fact that': 'because', 'as a matter of fact': 'actually',
+      'by and large': 'generally', 'to some extent': 'somewhat',
+      'a variety of': 'various', 'innovative': 'new', 'novel': 'new',
+      'meticulous': 'careful', 'expedite': 'speed up', 'component': 'part',
+      'beneficial': 'useful', 'problematic': 'tricky', 'complicated': 'complex',
+      'straightforward': 'simple', 'proficient': 'skilled',
+      'optimal': 'best', 'feasible': 'possible'
+    };
+
+    const contractions = {
+      'cannot': "can't", 'will not': "won't", 'do not': "don't",
+      'does not': "doesn't", 'is not': "isn't", 'are not': "aren't",
+      'was not': "wasn't", 'have not': "haven't", 'has not': "hasn't"
+    };
+
+    const fillers = ['really', 'very', 'quite', 'actually', 'literally', 'basically',
+      'obviously', 'certainly', 'essentially', 'totally', 'completely'];
+
+    const casualStarters = ['Honestly,', 'Look,', 'Truth is,', 'You know,', 'Here\'s the thing,', 'Real talk,'];
+
+    function $(id) { return document.getElementById(id); }
+
+    function getOpt(id) {
+      const el = $(id);
+      return el ? el.checked : false;
+    }
+
+    function showToast(msg, isError = false) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.style.background = isError ? 'var(--error)' : 'var(--success)';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function showProcessing(show) {
+      $('processing').classList.toggle('active', show);
+    }
+
+    function setLoading(loading) {
+      const btn = $('humanizeBtn');
+      btn.classList.toggle('loading', loading);
+    }
+
+    async function humanize() {
+      const input = $('input').value;
+      if (!input.trim()) {
+        showToast('Please enter some text first!', true);
+        return;
+      }
+
+      setLoading(true);
+      showProcessing(true);
+
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      let text = input;
+      const optInformal = getOpt('opt-informal');
+      const optShorten = getOpt('opt-shorten');
+      const optVariety = getOpt('opt-variety');
+      const optVoice = getOpt('opt-voice');
+      const optContractions = getOpt('opt-contractions');
+      const optCasual = getOpt('opt-casual');
+
+      if (optInformal) {
+        for (const [ai, human] of Object.entries(replacements)) {
+          const regex = new RegExp('\\b' + ai + '\\b', 'gi');
+          text = text.replace(regex, human);
+        }
+      }
+
+      if (optContractions) {
+        for (const [long, short] of Object.entries(contractions)) {
+          const regex = new RegExp('\\b' + long + '\\b', 'gi');
+          text = text.replace(regex, short);
+        }
+      }
+
+      if (optShorten) {
+        for (const filler of fillers) {
+          const regex = new RegExp('\\b' + filler + '\\b', 'gi');
+          text = text.replace(regex, '');
+        }
+        text = text.replace(/\s+/g, ' ');
+      }
+
+      if (optVariety) {
+        const parts = text.split(/([.!?]+)/);
+        const newParts = parts.map((part, i) => {
+          if (i % 3 === 0 && part.length > 40 && !part.match(/^[.!?]+$/)) {
+            return part.replace(',', ' —');
+          }
+          return part;
+        });
+        text = newParts.join('');
+      }
+
+      if (optVoice) {
+        text = text.replace(/was\s+(\w+ed)\s+by\s+(\w+)/gi, '$2 $1');
+        text = text.replace(/is\s+being\s+(\w+ed)/gi, 'is $1');
+        text = text.replace(/has\s+been\s+(\w+ed)/gi, 'has $1');
+      }
+
+      if (optCasual) {
+        const starter = casualStarters[Math.floor(Math.random() * casualStarters.length)];
+        text = starter + ' ' + text.toLowerCase();
+      }
+
+      text = text.replace(/\s+/g, ' ').trim();
+      if (!/[.!?]$/.test(text)) text += '.';
+
+      $('output').value = text;
+      $('output').classList.add('output-highlight');
+      setTimeout(() => $('output').classList.remove('output-highlight'), 500);
+
+      updateStats();
+      
+      setLoading(false);
+      showProcessing(false);
+      showToast('Text humanized!');
+    }
+
+    function updateStats() {
+      const text = $('output').value;
+      const words = text.trim() ? text.trim().split(/\s+/) : [];
+      $('words').textContent = words.length;
+      $('chars').textContent = text.length;
+      
+      const avg = words.length / Math.max(1, text.split(/[.!?]/).length - 1);
+      let level = 'Easy';
+      if (avg > 18) level = 'Hard';
+      else if (avg > 12) level = 'Medium';
+      $('level').textContent = level;
+    }
+
+    function clearText() {
+      $('input').value = '';
+      $('output').value = '';
+      $('words').textContent = '0';
+      $('chars').textContent = '0';
+      $('level').textContent = '-';
+    }
+
+    function copyText() {
+      const text = $('output').value;
+      if (!text) { showToast('Nothing to copy!', true); return; }
+      navigator.clipboard.writeText(text).then(() => showToast('Copied!')).catch(() => showToast('Copy failed!', true));
+    }
+
+    function swapText() {
+      const temp = $('input').value;
+      $('input').value = $('output').value;
+      $('output').value = temp;
+      updateStats();
+    }
+
+    $('input').addEventListener('input', () => {
+      const t = $('input').value;
+      const w = t.trim() ? t.trim().split(/\s+/) : [];
+      $('words').textContent = w.length;
+      $('chars').textContent = t.length;
+    });
+  </script>
+</body>
+</html>
